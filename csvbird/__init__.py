@@ -9,6 +9,8 @@ Attributes and properties:
     .path
     .delimiter
     .fieldnames
+    .nrows
+    .nfields
 
 Methods:
     .insert(data: dict)
@@ -18,8 +20,6 @@ Methods:
     .change_delimiter(new_delimiter: str)
     .copy()
     .len()
-    .nrows()
-    .nfields()
     .to_dict()
     .to_json()
     .to_list()
@@ -74,6 +74,14 @@ class CSVBird():
                 return fieldnames[0].split(self.delimiter)
             else:
                 return []
+            
+    @property
+    def nrows(self) -> int:
+        return len(self)
+    
+    @property
+    def nfields(self) -> int:
+        return len(self.fieldnames)
     
     # __methods__
     def __len__(self):
@@ -81,12 +89,11 @@ class CSVBird():
             return sum(1 for _ in f)
 
     # .methods()
-    def show(self):
-        MAX_PRINT_LINES = 50         # Max print lines
+    def show(self, max_lines: int = 50):
         with open(self.file_path, 'r') as f:
             lines = f.readlines()
         for i, line in enumerate(lines):
-            if i > MAX_PRINT_LINES:
+            if i > max_lines:
                 break
             adjusted_line = line.replace('\n','').replace(f'{self.delimiter}','\t')
             print(f'{adjusted_line}')
@@ -120,8 +127,6 @@ class CSVBird():
     def delete_field(self): ...
     def change_delimiter(self): ...
     def copy(self): ...
-    def nrows(self): ...
-    def nfields(self): ...
     def to_dict(self): ...
     def to_json(self): ...
     def to_lists(self): ...     # ?
