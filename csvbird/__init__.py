@@ -27,11 +27,8 @@ Methods:
 
 
 import csv
-import json
 
 from pathlib import Path
-from typing import Iterable
-from io import TextIOWrapper
 
 class CSVBird():
     def __init__(
