@@ -37,66 +37,79 @@ class CSVBird():
         self, 
         file_path: str | Path,
         delimiter: str = ',',
-        fieldnames: list[str] | None = None,
-        fieldvalues: list | None = None,
         # types: dict | None = None,        # Not implemented
     ):
-        path = _ensure_path(file_path)
-
-        if not path.exists():
-            if fieldnames is None:
-                raise ValueError("Please pass 'fieldnames' if ")
-            _create_new_file(path)
+        file_path = _ensure_path(file_path)
 
         # Set attrs
-        self.path = path
+        self.file_path = file_path
         self.delimiter = delimiter
+
+        if (d:=_guess_file_delimiter(file_path)) != delimiter and not self.empty:
+            print(f'WARNING: Looks like the csv delimiter is {d} and not {delimiter}')
+
 
     @property
     def empty(self):
-        with open(self.path, 'r') as f:
+        with open(self.file_path, 'r') as f:
             lines = f.readlines()
             if lines:
                 return False
             return True
-
+    
     @property
     def fieldnames(self) -> list[str]:
-        with open(self.path, 'r') as f:
+        with open(self.file_path, 'r') as f:
             fieldnames = csv.DictReader(f).fieldnames
             if fieldnames:
-                return list(fieldnames)
+                return fieldnames[0].split(self.delimiter)
             else:
                 return []
-            
+    
+    # __methods__
     def __len__(self):
-        with open(self.path, 'r') as f:
+        with open(self.file_path, 'r') as f:
             return sum(1 for _ in f)
-        
-    # Main methods
+
+    # .methods()
+    def show(self):
+        MAX_PRINT_LINES = 50         # Max print lines
+        with open(self.file_path, 'r') as f:
+            lines = f.readlines()
+        for i, line in enumerate(lines):
+            if i > MAX_PRINT_LINES:
+                break
+            adjusted_line = line.replace('\n','').replace(f'{self.delimiter}','\t')
+            print(f'{adjusted_line}')
+
+    def add(self, bird: 'CSVBird'):
+        #TODO
+        # self.insert(bird.to_dict())
+
+    def len(self):
+        return len(self)
+    
     def insert(self, data: dict):
-        path = self.path
+        file_path = self.file_path
         delimiter = self.delimiter
-        fieldnames = self.fieldnames
-        empty = self.empty
+        file_fieldnames = self.fieldnames
+        data_fields = list(data.keys())
 
-        file_header = _get_file_header(path)
-        if file_header != fieldnames:
-            new_header = f'{delimiter}'.join(fieldnames)
-            _change_file_header(path, new_header)
+        if data_fields != file_fieldnames:
+            new_fields = [field for field in data_fields if field not in file_fieldnames]
+            new_fieldnames = file_fieldnames + new_fields
+            new_header = f'{delimiter}'.join(new_fieldnames)
+            _change_file_header(file_path, new_header)
+            fieldnames = new_header.split(delimiter)
+        else:
+            fieldnames = file_fieldnames
 
-        with open(path, 'a', newline='') as f:
+        with open(file_path, 'a', newline='') as f:
             writer = csv.DictWriter(f, delimiter=delimiter, fieldnames=fieldnames)
-            if empty:
-                writer.writeheader()
             writer.writerow(data)
             
 
     #TODO
-    '''
-    def to_dict(self,) -> dict: pass
-    def to_json(self,) -> json: pass
-    '''
 
 # ----------------------------------- utils ---------------------------------- #
 
@@ -108,20 +121,30 @@ def _ensure_path(path: str | Path) -> Path:
     else:
         raise TypeError(f'path must be str or Path')
 
-def _create_new_file(path: Path):
-    with open(path, 'w') as _:
+def _create_new_file(file_path: Path):
+    with open(file_path, 'w') as _:
         pass
 
-def _get_file_header(path: Path) -> str:
-    with open(path, 'r') as file:
+def _get_file_delimiter(file_path: Path) -> str:
+    ...
+
+def _guess_file_delimiter(file_path):
+    with open(file_path, 'r') as f:
+        first_line = f.readline()
+    possible_delimiters = [',', ';', '\t', '|', ':']
+    delimiter = max(possible_delimiters, key=first_line.count)
+    return delimiter
+
+def _get_file_header(file_path: Path) -> str:
+    with open(file_path, 'r') as file:
         header = file.readline().replace('\n','')
     return header
 
-def _change_file_header(path: Path, new_header: str) -> None:
-    with open(path, 'r') as file:
+def _change_file_header(file_path: Path, new_header: str) -> None:
+    with open(file_path, 'r') as file:
         file.readline()
         remaining_lines = file.read()
 
-    with open(path, 'w') as file:
+    with open(file_path, 'w') as file:
         file.write(f'{new_header}\n')
         file.write(remaining_lines)
