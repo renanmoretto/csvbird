@@ -85,6 +85,7 @@ class CSVBird():
     def add(self, bird: 'CSVBird'):
         #TODO
         # self.insert(bird.to_dict())
+        ...
 
     def len(self):
         return len(self)
