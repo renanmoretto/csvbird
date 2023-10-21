@@ -1,4 +1,9 @@
 '''
+This is the sole module of the csvbird library.
+The library has no dependencies other than Python itself.
+
+All the usage can be easily understood by this straightforward 
+overview of the API:
 
 Attributes and properties:
     .path
@@ -6,7 +11,7 @@ Attributes and properties:
     .fieldnames
 
 Methods:
-    .insert(data: list | dict)
+    .insert(data: dict)
     .filter_by(**kw)
     .delete(**kw)
     .delete_field(fieldname: str | list[str])
@@ -18,10 +23,6 @@ Methods:
     .to_dict()
     .to_json()
     .to_list()
-
-Constructors/classmethods:
-    .new()
-
 '''
 
 
@@ -40,6 +41,14 @@ class CSVBird():
         # types: dict | None = None,        # Not implemented
     ):
         file_path = _ensure_path(file_path)
+
+        if file_path.suffix != '.csv':
+            raise ValueError('file_path suffix must be .csv')
+
+        # Create new file if it doesn't exists
+        if not file_path.exists():
+            with open(file_path, 'w') as _:
+                pass
 
         # Set attrs
         self.file_path = file_path
@@ -82,11 +91,6 @@ class CSVBird():
             adjusted_line = line.replace('\n','').replace(f'{self.delimiter}','\t')
             print(f'{adjusted_line}')
 
-    def add(self, bird: 'CSVBird'):
-        #TODO
-        # self.insert(bird.to_dict())
-        ...
-
     def len(self):
         return len(self)
     
@@ -108,9 +112,19 @@ class CSVBird():
         with open(file_path, 'a', newline='') as f:
             writer = csv.DictWriter(f, delimiter=delimiter, fieldnames=fieldnames)
             writer.writerow(data)
-            
 
-    #TODO
+    #TODO 's
+    def add(self, bird: 'CSVBird'): ...
+    def filter_by(self): ...
+    def delete(self): ...
+    def delete_field(self): ...
+    def change_delimiter(self): ...
+    def copy(self): ...
+    def nrows(self): ...
+    def nfields(self): ...
+    def to_dict(self): ...
+    def to_json(self): ...
+    def to_lists(self): ...     # ?
 
 # ----------------------------------- utils ---------------------------------- #
 
@@ -121,13 +135,6 @@ def _ensure_path(path: str | Path) -> Path:
         return path
     else:
         raise TypeError(f'path must be str or Path')
-
-def _create_new_file(file_path: Path):
-    with open(file_path, 'w') as _:
-        pass
-
-def _get_file_delimiter(file_path: Path) -> str:
-    ...
 
 def _guess_file_delimiter(file_path):
     with open(file_path, 'r') as f:
